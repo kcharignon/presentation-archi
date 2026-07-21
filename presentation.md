@@ -1,18 +1,58 @@
-# Présentation — Design patterns & architecture du projet compliance
+# Mise en application d'une clean architecture en PHP
+#### Autrice/Auteur : Nina Iacoponelli & Kantin Charignon 
 
-**Légende étiquettes** : `SOLID` (Single Responsibility / Open-Closed / Liskov / Interface Segregation / Dependency Inversion) · `DRY` (Don't Repeat Yourself) · `KISS` (Keep It Simple) · `Loi de Déméter` (un objet ne parle qu'à ses voisins directs).
+
+## Introduction 
+
+Il est souvent difficile de mettre en application concrète des principes d'architecture logicielle, malgré des noms et acronymes qui paraissent familiers. Voici les concepts centraux abordés dans cette présentation :
+
+- **TDD** (*Test-Driven Development*, développement piloté par les tests) : on écrit le test avant le code métier, ce qui force à concevoir une interface claire et garantit une couverture de test dès l'origine.
+- **Test-First** : principe plus large que TDD — le test est écrit *avant* le code métier qu'il vérifie, ce qui force à concevoir une interface claire dès le départ et garantit une couverture de test dès l'origine, sans forcément suivre le cycle strict red/green/refactor.
+- **DDD** (*Domain-Driven Design*, conception pilotée par le domaine métier) : le code colle au vocabulaire et aux règles du métier, et les invariants métier sont protégés directement dans le modèle plutôt qu'éparpillés dans des services.
+- **CQRS** (*Command Query Responsibility Segregation*, séparation des responsabilités entre écriture et lecture) : les opérations qui modifient l'état (commandes) sont séparées des opérations qui consultent l'état (requêtes), chacune avec son propre chemin optimisé.
+- **Architecture hexagonale** (aussi appelée *Ports & Adapters*) : la logique métier (le Domain) est isolée au centre de l'application et ne dépend d'aucun détail technique (base de données, HTTP, messagerie) ; ce sont les détails techniques qui dépendent du métier, jamais l'inverse.
+- **SOLID** (*Single Responsibility, Open-Closed, Liskov, Interface Segregation, Dependency Inversion*) : cinq principes de conception orientée objet qui visent un code facile à faire évoluer sans casser l'existant.
+- **DRY** (*Don't Repeat Yourself*, ne pas se répéter) : chaque règle ou connaissance métier ne doit exister qu'à un seul endroit dans le code.
+- **KISS** (*Keep It Simple*, garder simple) : privilégier la solution la plus simple qui répond au besoin, éviter la complexité non justifiée.
+- **Loi de Déméter** : un objet ne doit parler qu'à ses voisins directs, jamais à travers plusieurs niveaux d'indirection.
+
+Ces notions restent souvent abstraites, car ce sont des définitions régulièrement sujettes à interprétation. Cette présentation propose une mise en application concrète de ces principes sur un projet réel, en expliquant les bénéfices qu'on en tire ainsi que les concessions liées à notre interprétation.
+
+### Contexte métier
+L'application qui va nous servir de support est une application qui contrôle a posteriori la conformité d'une course de taxi/VTC, au regard de la législation liée à ce secteur d'activité. Une fois la course conforme, on transmet les informations à un service de facturation externe.
 
 ## Sommaire
 
-**Patterns** — 01 Hexagonale · 02 DDD · 03 CQRS · 04 Repository/Loader · 05 Factory (create/load) · 06 Clock/IdGenerator · 07 Strategy · 08 Builder · 09 Event-Driven · 10 Value Object · 11 Mediator
+**🧩 Patterns**
+- 01 — Hexagonale (Ports & Adapters)
+- 02 — DDD
+- 03 — CQRS
+- 04 — Repository / Loader
+- 05 — Factory (create / load)
+- 06 — Clock / IdGenerator
+- 07 — Strategy
+- 08 — Builder
+- 09 — Event-Driven
+- 10 — Value Object
+- 11 — Mediator
 
-**Validation** — 12 Contrôleur vs Domain
+**✅ Validation**
+- 12 — Contrôleur vs Domain
 
-**Tests** — 13 Découpage miroir · 14 4 classes de base · 15 ApplicationCore · 16 InputAdapter · 17 OutputAdapter · 18 Given/When/Then · 19 Bénéfices
+**🧪 Tests**
+- 13 — Découpage miroir
+- 14 — 4 classes de base
+- 15 — ApplicationCore
+- 16 — InputAdapter
+- 17 — OutputAdapter
+- 18 — Given/When/Then
+- 19 — Bénéfices
 
-**Outillage** — 20 Qualité & doc API
+**🛠️ Outillage**
+- 20 — Qualité & doc API
 
-**Métier** — 21 Anomalies
+**💼 Métier**
+- 21 — Anomalies
 
 ---
 
@@ -20,14 +60,12 @@
 
 ### 01 — Architecture hexagonale (Ports & Adapters)
 
-`SOLID · DIP` `Loi de Déméter`
-
 **Problème résolu** : Découpler la logique métier des détails techniques (DB, HTTP, RabbitMQ). Le Domain ne connaît rien de l'Infrastructure.
 
 
 Dépendance dans un seul sens : `Infrastructure → Application → Domain`
 
-**Exemple réel — use case création de recette, 3 couches successives**
+**Exemple réel — Creation d'une course, 3 couches successives**
 - `src/Recipe/Model/Recipe.php` — Règles métier
 - `src/Recipe/Application/Command/CreateRecipe/CreateRecipeCommandHandler.php` — Orchestration
 - `src/Recipe/Infrastructure/Http/Controller/CreateRecipeController + RecipeDoctrineRepository.php` — I/O concret
@@ -35,8 +73,6 @@ Dépendance dans un seul sens : `Infrastructure → Application → Domain`
 > Domain ignore tout de Symfony et Doctrine. Ça permet de changer la DB ou le framework sans toucher aux règles métier, et de tester le métier sans base de données via des repositories in-memory.
 
 ### 02 — DDD — Domain-Driven Design
-
-`SOLID · SRP` `Loi de Déméter`
 
 **Problème résolu** : Avec un modèle anémique (getters/setters publics + logique dans des services), rien n'empêche un service d'appeler `setPrice(0)` sans passer par les vérifications métier (impossible de modifier un montant de facture) — l'invariant "Toute facture transmise est immuable" peut être violé depuis n'importe quel point d'entrée, et la même règle doit être recopiée dans chaque service qui touche l'entité. DDD répond à ça : coller le code au langage métier et protéger les invariants dans le modèle lui-même, pas dans des services autour.
 
