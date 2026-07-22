@@ -92,10 +92,7 @@ Distinction Aggregate / Entity : `Recipe` est la racine d'agrégat (Aggregate Ro
 - `AddIngredientToRecipeCommand` — `final readonly class` implements `CommandInterface`
 - `AddIngredientToRecipeCommandHandler` — Constructeur + `__invoke`
 
-**Exemple réel — Query**
-- `ReadRecipeQuery` — `final readonly class` implements `QueryInterface`
-- `ReadRecipeQueryHandler` — Constructeur + `__invoke`
-- `RecipeDto` — DTO, retourné au contrôleur
+![Schéma CQRS](CQRS-schema.png)
 
 > Le write side passe par le domain model et ses invariants. Le read side court-circuite le domain, va direct en DTO via un Loader — pas besoin d'objet métier juste pour afficher une liste, un simple DTO suffit.
 
