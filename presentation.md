@@ -88,10 +88,6 @@ Distinction Aggregate / Entity : `Recipe` est la racine d'agrégat (Aggregate Ro
 
 **Problème résolu** : Séparer écriture (mutation + invariants) et lecture (projection optimisée, sans règle métier).
 
-**Exemple réel — Command**
-- `AddIngredientToRecipeCommand` — `final readonly class` implements `CommandInterface`
-- `AddIngredientToRecipeCommandHandler` — Constructeur + `__invoke`
-
 ![Schéma CQRS](CQRS-schema.png)
 
 > Le write side passe par le domain model et ses invariants. Le read side court-circuite le domain, va direct en DTO via un Loader — pas besoin d'objet métier juste pour afficher une liste, un simple DTO suffit.
