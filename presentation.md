@@ -65,10 +65,7 @@ L'application qui va nous servir de support est une application qui contrôle a 
 
 Dépendance dans un seul sens : `Infrastructure → Application → Domain`
 
-**Exemple réel — Creation d'une course, 3 couches successives**
-- `src/Recipe/Model/Recipe.php` — Règles métier
-- `src/Recipe/Application/Command/CreateRecipe/CreateRecipeCommandHandler.php` — Orchestration
-- `src/Recipe/Infrastructure/Http/Controller/CreateRecipeController + RecipeDoctrineRepository.php` — I/O concret
+![Architecture hexagonale](archi-hexa.png)
 
 > Domain ignore tout de Symfony et Doctrine. Ça permet de changer la DB ou le framework sans toucher aux règles métier, et de tester le métier sans base de données via des repositories in-memory.
 
