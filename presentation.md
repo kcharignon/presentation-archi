@@ -84,8 +84,6 @@ Distinction Aggregate / Entity : `Recipe` est la racine d'agrégat (Aggregate Ro
 
 ### 03 — CQRS
 
-`SOLID · ISP` `KISS`
-
 **Problème résolu** : Séparer écriture (mutation + invariants) et lecture (projection optimisée, sans règle métier).
 
 ![Schéma CQRS](CQRS-schema.png)
@@ -93,8 +91,6 @@ Distinction Aggregate / Entity : `Recipe` est la racine d'agrégat (Aggregate Ro
 > Le write side passe par le domain model et ses invariants. Le read side court-circuite le domain, va direct en DTO via un Loader — pas besoin d'objet métier juste pour afficher une liste, un simple DTO suffit.
 
 ### 04 — Repository vs Loader
-
-`SOLID · ISP` `KISS`
 
 **Problème résolu** : Repository = persistance d'agrégats (écriture, cohérence). Loader = lecture de projections (perf, sans règle métier).
 
@@ -110,8 +106,6 @@ Distinction Aggregate / Entity : `Recipe` est la racine d'agrégat (Aggregate Ro
 
 ### 05 — Factory Method statique — create() vs load()
 
-`SOLID · SRP`
-
 **Problème résolu** : Constructeur public absent → force à passer par une factory nommée qui exprime l'intention : création métier ou reconstitution technique.
 
 **Exemple réel**
@@ -123,8 +117,6 @@ Distinction Aggregate / Entity : `Recipe` est la racine d'agrégat (Aggregate Ro
 > Deux entrées, deux intentions. `create` = use case métier avec validation. `load` = reconstitution de confiance, réservée à l'infra et aux builders de test.
 
 ### 06 — Injection de dépendance
-
-`SOLID · DIP`
 
 **Problème résolu** : Aucun `new DateTimeImmutable()` ni `Uuid::v4()` caché dans le domain → tests déterministes.
 
@@ -138,8 +130,6 @@ Lien direct avec le TDD : injecter Clock/IdGenerator plutôt que les générer d
 
 ### 07 — Strategy Pattern
 
-`SOLID · OCP`
-
 **Problème résolu** : Choisir dynamiquement l'algorithme de sérialisation selon le type d'event RabbitMQ reçu.
 
 **Exemple réel**
@@ -150,8 +140,6 @@ Lien direct avec le TDD : injecter Clock/IdGenerator plutôt que les générer d
 
 ### 08 — Builder Pattern (test helpers)
 
-`DRY` `KISS`
-
 **Problème résolu** : Construire des objets domain complexes pour les tests sans dupliquer des dizaines de paramètres partout.
 
 > Les builders vivent uniquement côté test, jamais en prod — ils construisent des fixtures lisibles, pas des entités dans le vrai flux métier.
@@ -159,8 +147,6 @@ Lien direct avec le TDD : injecter Clock/IdGenerator plutôt que les générer d
 > lien utile : https://refactoring.guru/design-patterns/builder
 
 ### 09 — Event-Driven / Observer
-
-`SOLID · OCP` `SOLID · DIP`
 
 **Problème résolu** : Découpler les effets de bord (notifier d'autres services) de la logique de mutation.
 
@@ -179,8 +165,6 @@ Event -> EventListener -> commandBus->dispatch()
 
 ### 10 — Value Object
 
-`Loi de Déméter` `KISS`
-
 **Problème résolu** : Encapsuler une valeur immuable avec son propre comportement, éviter la primitive obsession.
 
 **Exemple réel**
@@ -192,8 +176,6 @@ Exemple métier plus parlant qu'une date : un montant facturé devrait porter sa
 > Toutes les dates du domain passent par ce VO, jamais `\DateTimeImmutable` brut — garantit l'immutabilité et un point unique pour la logique de date.
 
 ### 11 — Mediator — CommandBus / QueryBus
-
-`SOLID · DIP` `Loi de Déméter`
 
 **Problème résolu** : Découpler le contrôleur du handler concret — il ne connaît que l'interface du bus.
 
@@ -207,8 +189,6 @@ Exemple métier plus parlant qu'une date : un montant facturé devrait porter sa
 ## Validation
 
 ### 12 — Validation — deux niveaux, deux responsabilités
-
-`SOLID · SRP`
 
 **Constat** : Aucune entrée validation dans les chaînes de bus Messenger — `config/packages/validator.yaml` ne configure que le service Symfony Validator de base.
 
@@ -228,8 +208,6 @@ La structure de `tests/` reproduit celle de `src/`, couche par couche — chaque
 
 ### 13 — Découpage des tests — miroir de l'architecture
 
-`KISS`
-
 **Principe**
 - `tests/Compliance/ApplicationCore/` — Unit — CommandHandlers / QueryHandlers
 - `tests/Compliance/InputAdapter/` — Contrôleurs HTTP + EventListeners RabbitMQ
@@ -241,8 +219,6 @@ La structure de `tests/` reproduit celle de `src/`, couche par couche — chaque
 > Le découpage des tests suit exactement Deptrac : si je sais dans quelle couche vit le code, je sais dans quel dossier vit son test, et quelle classe de base utiliser.
 
 ### 14 — Quatre classes de base, quatre contrats de test
-
-`SOLID · ISP`
 
 | Base | Étend | Rôle |
 |---|---|---|
@@ -299,8 +275,6 @@ Chaque test commente ses 3 blocs `// Given / // When / // Then`.
 
 ### 20 — Outils qualité — appliqués, pas juste documentés
 
-`DRY` `KISS`
-
 Ce qui garantit la qualité du code en continu, pas juste à la revue de code.
 - `phpstan.neon:23 — level: 8` — Analyse statique au niveau le plus strict
 - `rector/rector ^2.4, php-cs-fixer ^3.94.2` — Fix automatique via `make lint` — élimine la réécriture manuelle répétitive (DRY appliqué à l'outillage lui-même)
@@ -317,8 +291,6 @@ Ce qui garantit la qualité du code en continu, pas juste à la revue de code.
 
 ### 21 — Anomalies — Pipeline / Aggregator de règles de conformité
 
-`SOLID · OCP` `SOLID · SRP`
-
 **Architecture** : Interface `RideAuditor`, chaque règle de conformité est une classe indépendante taguée `app.ride_auditor`. Plus proche d'un **Pipeline** ou d'un **Aggregator** que d'un Strategy pur : toutes les règles s'exécutent (pas un choix exclusif d'une seule), chacune produit indépendamment son verdict, et l'orchestrateur agrège les anomalies détectées.
 
 **8 auditors, règle exacte**
@@ -334,20 +306,3 @@ Ce qui garantit la qualité du code en continu, pas juste à la revue de code.
 > Ce n'est pas un Strategy où un seul candidat est choisi — c'est un pipeline d'auditeurs indépendants, tous exécutés, dont les résultats sont agrégés. Ajouter une règle d'anomalie = ajouter une classe taguée, zéro modif de l'orchestrateur ni des autres règles.
 
 ---
-
-## Méthode de révision
-
-- 1 pattern/jour — relire la section, ouvrir le fichier réel cité, vérifier que ça matche toujours le code actuel.
-- Ré-expliquer sans notes — à voix haute, comme en entretien, 30 à 60 secondes max.
-- Lier les patterns entre eux — CQRS + Repository/Loader + Mediator forment un seul système cohérent, pas 3 concepts isolés. Savoir raconter le flux complet : HTTP → Controller → Bus (Mediator) → Handler → Domain (Factory) → Repository → DB.
-
-**Mock Q&A**
-- Pourquoi Repository ET Loader séparés ici ?
-- Pourquoi `create()` vs `load()` plutôt qu'un seul constructeur ?
-- Que se passe-t-il si un CommandHandler appelle `load()` ?
-- Pourquoi injecter Clock/IdGenerator plutôt que les générer dans le domain ?
-- Pourquoi les anomalies (§21) ne sont pas un Strategy classique ?
-
----
-
-*compliance · fiche de révision entretien · généré depuis le code réel du projet*
